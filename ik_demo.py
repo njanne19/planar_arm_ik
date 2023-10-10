@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 
 def draw_simple_arm(ax, theta1, theta2, theta3, l1=1, l2=1, l3=1, x_c=None, y_c=None, x_d=None, y_d=None):
     # Convert angles to radians
-    theta1_deg = theta1
-    theta2_deg = theta2
-    theta3_deg = theta3
-    
-    theta1 = np.deg2rad(theta1)
-    theta2 = np.deg2rad(theta2)
-    theta3 = np.deg2rad(theta3)
+    # Convert angles to degrees
+    theta1_deg = np.rad2deg(theta1)
+    theta2_deg = np.rad2deg(theta2)
+    theta3_deg = np.rad2deg(theta3)
+    print(f"theta 1: {theta1_deg}")
+    print(f"theta 2: {theta2_deg}")
+    print(f"theta 3: {theta3_deg}")
     
     # Calculate (x, y) positions for first joint
     x1 = l1 * np.cos(theta1)
@@ -46,14 +46,10 @@ def draw_simple_arm(ax, theta1, theta2, theta3, l1=1, l2=1, l3=1, x_c=None, y_c=
     ax.grid(True)
     
 def draw_armlab_arm(ax, theta1, theta2, theta3, l1=1, l2=1, l3=1, l4 = 1, x_c=None, y_c=None, x_d=None, y_d=None):
-    # Convert angles to radians
-    theta1_deg = theta1
-    theta2_deg = theta2
-    theta3_deg = theta3
-    
-    theta1 = np.deg2rad(theta1)
-    theta2 = np.deg2rad(theta2)
-    theta3 = np.deg2rad(theta3)
+    # Convert angles to degrees
+    theta1_deg = np.rad2deg(theta1)
+    theta2_deg = np.rad2deg(theta2)
+    theta3_deg = np.rad2deg(theta3)
     
     # Calculate (x, y) positions for first top node
     x1 = l1 * np.sin(theta1)
@@ -110,8 +106,6 @@ def main():
     desired_rotation = 0
     x_d = np.sqrt(np.power(goal_state[0], 2) + np.power(goal_state[1], 2))/1000
     y_d = np.sqrt(np.power(goal_state[0], 2) + np.power(goal_state[2], 2))/1000
-    x_d = 0.47
-    y_d = 0.2
     x_c = x_d - l3*np.cos(desired_rotation)
     y_c = y_d + l3*np.sin(desired_rotation)
     
@@ -123,42 +117,32 @@ def main():
         print("Point unreachable")
         return
 
-    # Manually change theta1 and theta2 values
-    # theta1_simple = 86.589  # angle for l1 in degrees
-    # theta2_simple = 150.98  # angle for l2 in degrees
-    # theta3_simple = (0 - (theta1_simple + theta2_simple))  # angle for l3 in degrees
-    # theta2_input = (np.power(x_c, 2) + np.power(y_c, 2) - np.power(l1, 2) - np.power(l2, 2))/(2*l1*l2)
-    # theta2_input_clamped = np.clip(theta2_input, -1, 1)
     
-    # theta2_simple = np.arccos(theta2_input_clamped)
-    # theta1_simple = np.arctan2(y_c, x_c) - np.arctan2(l2*np.sin((theta2_simple)), (l1 + l2)*np.cos(theta2_simple))  # angle for l1 in degrees
-    # theta3_simple = (desired_rotation - (theta1_simple + theta2_simple))  # angle for l3 in degrees
+    #  Two options for theta 2 given elbow up elbow down position
+    theta2_simple_1 = np.arccos((np.power(x_c, 2) + np.power(y_c, 2) - np.power(l1, 2) - np.power(l2, 2))/(2*l1*l2))
+    theta2_simple_2 = -1 * np.arccos((np.power(x_c, 2) + np.power(y_c, 2) - np.power(l1, 2) - np.power(l2, 2))/(2*l1*l2))
     
-    # Chat GPT answers
-    theta2_simple = np.arccos((np.power(x_c, 2) + np.power(y_c, 2) - np.power(l1, 2) - np.power(l2, 2))/(2*l1*l2))
-    theta2_simple = np.abs(theta2_simple) 
-    theta1_simple = np.arctan2(y_c, x_c) - np.arctan2(l2*np.sin((theta2_simple)), (l1 + l2)*np.cos(theta2_simple))
+    print(f"theta 2 1: {np.rad2deg(theta2_simple_1)}")
+    print(f"theta 2 2: {np.rad2deg(theta2_simple_2)}")
+    
+    # Pick which one to use
+    theta2_simple = theta2_simple_2
+    
+    theta1_simple = np.arctan(y_c/x_c) - np.arctan((l2*np.sin((theta2_simple)))/(l1 + l2*np.cos(theta2_simple)))
     theta3_simple = (desired_rotation - (theta1_simple + theta2_simple)) 
-    # Convert to degrees
-    theta1_simple = np.rad2deg(theta1_simple)
-    theta2_simple = np.rad2deg(theta2_simple)
-    theta3_simple = np.rad2deg(theta3_simple)
     
 
     # Armlab angles 
-    # theta1_armlab = 17.45
-    # theta2_armlab = 75.02
-    # theta3_armlab = -92.47
-    theta1_armlab = 45
-    theta2_armlab = 45
-    theta3_armlab = 45
+    theta1_armlab = 0
+    theta2_armlab = 0
+    theta3_armlab = 0
 
     # Generate plot for both 
     arm_figure = plt.figure(figsize=(12, 8))
     arm_axes = arm_figure.subplots(1, 2)
 
     draw_simple_arm(arm_axes[0], theta1_simple, theta2_simple, theta3_simple, l1, l2, l3, x_c=x_c, y_c=y_c, x_d=x_d, y_d=y_d)
-    draw_armlab_arm(arm_axes[1], 0, 0, 0, l0, l_gap, l2, l3, x_c=x_c, y_c=y_c, x_d=x_d, y_d=y_d) 
+    draw_armlab_arm(arm_axes[1], theta1_armlab, theta2_armlab, theta3_armlab, l0, l_gap, l2, l3, x_c=x_c, y_c=y_c, x_d=x_d, y_d=y_d) 
 
     # Fix axes scale 
     arm_axes[0].set_xlim([-0.25, 0.75]) 
